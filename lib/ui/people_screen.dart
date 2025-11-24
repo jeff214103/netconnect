@@ -6,8 +6,32 @@ import 'package:netconnect/widgets/contact_dialog.dart';
 
 import 'package:provider/provider.dart';
 
-class PeopleScreen extends StatelessWidget {
+class PeopleScreen extends StatefulWidget {
   const PeopleScreen({super.key});
+
+  @override
+  State<PeopleScreen> createState() => _PeopleScreenState();
+}
+
+class _PeopleScreenState extends State<PeopleScreen> {
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.toLowerCase();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,11 +40,22 @@ class PeopleScreen extends StatelessWidget {
     final events = provider.events;
 
     final selectedEventId = provider.selectedEventId;
-    final contacts = selectedEventId == null
+    var contacts = selectedEventId == null
         ? allContacts
         : allContacts
               .where((c) => c.eventIds.contains(selectedEventId))
               .toList();
+
+    if (_searchQuery.isNotEmpty) {
+      contacts = contacts.where((c) {
+        final name = c.name.toLowerCase();
+        final company = c.company.toLowerCase();
+        final role = c.role.toLowerCase();
+        return name.contains(_searchQuery) ||
+            company.contains(_searchQuery) ||
+            role.contains(_searchQuery);
+      }).toList();
+    }
 
     final selectedEvent = selectedEventId == null
         ? null
@@ -34,52 +69,60 @@ class PeopleScreen extends StatelessWidget {
         padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'People',
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                ),
-                FilledButton.icon(
-                  onPressed: provider.isLoading
-                      ? null
-                      : () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => ContactDialog(
-                              availableEvents: events,
-                              onSave: (contact) async {
-                                try {
-                                  await provider.addContact(contact);
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Failed to add contact: $e',
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                }
-                              },
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isSmallScreen = MediaQuery.of(context).size.width < 600;
+                if (isSmallScreen) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'People',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
                             ),
-                          );
-                        },
-                  icon: provider.isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
                           ),
-                        )
-                      : const Icon(Icons.person_add),
-                  label: const Text('Add Contact'),
-                ),
-              ],
+                          _buildAddButton(provider, events),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildSearchField(),
+                    ],
+                  );
+                } else {
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'People',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Flexible(
+                              child: Container(
+                                constraints: BoxConstraints(maxWidth: 250),
+                                child: _buildSearchField(),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            _buildAddButton(provider, events),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                }
+              },
             ),
             const SizedBox(height: 24),
             if (selectedEvent != null) ...[
@@ -89,29 +132,20 @@ class PeopleScreen extends StatelessWidget {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.shade100),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.filter_list, size: 20, color: Colors.blue),
+                    const Icon(Icons.filter_list, size: 20),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Attendees of ${selectedEvent.title}',
-                        style: const TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(
-                        Icons.close,
-                        size: 20,
-                        color: Colors.blue,
-                      ),
+                      icon: const Icon(Icons.close, size: 20),
                       onPressed: () => provider.clearEventFilter(),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -125,7 +159,16 @@ class PeopleScreen extends StatelessWidget {
               child: provider.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : contacts.isEmpty
-                  ? const Center(child: Text('No contacts yet.'))
+                  ? Center(
+                      child: Text(
+                        _searchQuery.isNotEmpty
+                            ? 'No people found matching "$_searchQuery"'
+                            : 'No contacts yet.',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    )
                   : GridView.builder(
                       gridDelegate:
                           const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -149,11 +192,13 @@ class PeopleScreen extends StatelessWidget {
                           },
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.surface,
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.shadow.withOpacity(0.05),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -199,7 +244,9 @@ class PeopleScreen extends StatelessWidget {
                                       '${contact.role} @ ${contact.company}',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.grey.shade600,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
                                       ),
                                       textAlign: TextAlign.center,
                                       maxLines: 1,
@@ -229,7 +276,9 @@ class PeopleScreen extends StatelessWidget {
                                               vertical: 2,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: Colors.blue.shade50,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.secondaryContainer,
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                             ),
@@ -237,7 +286,9 @@ class PeopleScreen extends StatelessWidget {
                                               evt.title,
                                               style: TextStyle(
                                                 fontSize: 10,
-                                                color: Colors.blue.shade700,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSecondaryContainer,
                                               ),
                                             ),
                                           ),
@@ -256,6 +307,62 @@ class PeopleScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSearchField() {
+    return TextField(
+      controller: _searchController,
+      decoration: InputDecoration(
+        hintText: 'Search people...',
+        prefixIcon: const Icon(Icons.search, size: 20),
+        filled: true,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddButton(DataProvider provider, List<Event> events) {
+    return FilledButton.icon(
+      onPressed: provider.isLoading
+          ? null
+          : () {
+              showDialog(
+                context: context,
+                builder: (context) => ContactDialog(
+                  availableEvents: events,
+                  onSave: (contact) async {
+                    try {
+                      await provider.addContact(contact);
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Failed to add contact: $e')),
+                        );
+                      }
+                    }
+                  },
+                ),
+              );
+            },
+      icon: provider.isLoading
+          ? SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+            )
+          : const Icon(Icons.person_add),
+      label: const Text('Add Contact'),
     );
   }
 }

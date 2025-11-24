@@ -18,7 +18,8 @@ class EventDetailsDialog extends StatelessWidget {
         .toList();
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Container(
         padding: const EdgeInsets.all(24),
         constraints: const BoxConstraints(maxWidth: 500),
@@ -28,25 +29,38 @@ class EventDetailsDialog extends StatelessWidget {
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Text(
-                    event.title,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        event.title,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        DateFormat(
+                          'MMMM d, y',
+                        ).format(DateTime.parse(event.date)),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(
-                        Icons.edit,
-                        color: Colors.blue,
-                        size: 20,
-                      ),
+                      icon: const Icon(Icons.edit_outlined, size: 20),
                       onPressed: () {
                         showDialog(
                           context: context,
@@ -55,12 +69,8 @@ class EventDetailsDialog extends StatelessWidget {
                             onSave: (updatedEvent) async {
                               try {
                                 await provider.updateEvent(updatedEvent);
-                                if (context.mounted)
-                                  Navigator.pop(context); // Close EventDialog
-                                if (context.mounted)
-                                  Navigator.pop(
-                                    context,
-                                  ); // Close EventDetailsDialog
+                                if (context.mounted) Navigator.pop(context);
+                                if (context.mounted) Navigator.pop(context);
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
@@ -75,10 +85,10 @@ class EventDetailsDialog extends StatelessWidget {
                       tooltip: 'Edit',
                     ),
                     IconButton(
-                      icon: const Icon(
-                        Icons.delete,
-                        color: Colors.red,
+                      icon: Icon(
+                        Icons.delete_outline,
                         size: 20,
+                        color: Theme.of(context).colorScheme.error,
                       ),
                       onPressed: () async {
                         final confirm = await showDialog<bool>(
@@ -95,9 +105,11 @@ class EventDetailsDialog extends StatelessWidget {
                               ),
                               TextButton(
                                 onPressed: () => Navigator.pop(context, true),
-                                child: const Text(
+                                child: Text(
                                   'Delete',
-                                  style: TextStyle(color: Colors.red),
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
                                 ),
                               ),
                             ],
@@ -120,104 +132,165 @@ class EventDetailsDialog extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                const SizedBox(width: 8),
-                Text(
-                  DateFormat('MMM d, y').format(DateTime.parse(event.date)),
-                  style: const TextStyle(fontSize: 16),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.location_on, size: 16, color: Colors.grey),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    event.location,
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(event.description, style: const TextStyle(fontSize: 14)),
             const SizedBox(height: 24),
+            if (event.location.isNotEmpty) ...[
+              Row(
+                children: [
+                  Icon(
+                    Icons.location_on_outlined,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      event.location,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (event.description.isNotEmpty) ...[
+              Text(
+                event.description,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+            const Divider(),
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'Attendees (${attendees.length})',
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 if (attendees.isNotEmpty)
-                  TextButton.icon(
+                  TextButton(
                     onPressed: () {
                       Navigator.pop(context);
                       provider.navigateToPeople(event.id);
                     },
-                    icon: const Icon(Icons.people, size: 16),
-                    label: const Text('View All'),
+                    child: const Text('View All'),
                   ),
               ],
             ),
             const SizedBox(height: 12),
             if (attendees.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(16.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
                 child: Center(
                   child: Text(
                     'No attendees yet',
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                    ),
                   ),
                 ),
               )
             else
-              Container(
-                constraints: const BoxConstraints(maxHeight: 200),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: attendees.length > 3 ? 3 : attendees.length,
-                  itemBuilder: (context, index) {
-                    final contact = attendees[index];
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: CircleAvatar(
-                        backgroundImage: contact.avatarUrl != null
-                            ? NetworkImage(contact.avatarUrl!)
-                            : null,
-                        child: contact.avatarUrl == null
-                            ? Text(contact.name[0].toUpperCase())
-                            : null,
+              Column(
+                children: [
+                  ...attendees
+                      .take(3)
+                      .map(
+                        (contact) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 16,
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainerHighest,
+                                backgroundImage: contact.avatarUrl != null
+                                    ? NetworkImage(contact.avatarUrl!)
+                                    : null,
+                                child: contact.avatarUrl == null
+                                    ? Text(
+                                        contact.name[0].toUpperCase(),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      contact.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    if (contact.role.isNotEmpty ||
+                                        contact.company.isNotEmpty)
+                                      Text(
+                                        [contact.role, contact.company]
+                                            .where((s) => s.isNotEmpty)
+                                            .join(' @ '),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      title: Text(contact.name),
-                      subtitle: Text('${contact.role} @ ${contact.company}'),
-                    );
-                  },
-                ),
+                  if (attendees.length > 3)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Center(
+                        child: Text(
+                          '+${attendees.length - 3} more',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
-            if (attendees.length > 3)
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Center(
-                  child: Text(
-                    '+${attendees.length - 3} more',
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
-                ),
-              ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton(
+              child: FilledButton(
                 onPressed: () => Navigator.pop(context),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
                 child: const Text('Close'),
               ),
             ),

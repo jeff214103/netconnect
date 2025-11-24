@@ -31,7 +31,17 @@ class NetConnectApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         textTheme: GoogleFonts.interTextTheme(),
+        colorScheme: const ColorScheme.light(
+          primary: Colors.black,
+          onPrimary: Colors.white,
+          secondary: Colors.blue,
+          onSecondary: Colors.white,
+          surface: Colors.white,
+          onSurface: Colors.black,
+          outline: Color(0xFFE2E8F0), // slate-200
+        ),
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
       home: const HomePage(),
     );

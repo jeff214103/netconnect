@@ -28,16 +28,21 @@ class SettingsScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.cloud_sync, color: Colors.green),
+                              Icon(
+                                Icons.cloud_sync,
+                                color: Theme.of(context).colorScheme.secondary,
+                              ),
                               const SizedBox(width: 8),
                               const Text(
                                 'Google Integration',
@@ -49,9 +54,13 @@ class SettingsScreen extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          const Text(
+                          Text(
                             'Connect your Google Account to sync Contacts and Events to Google Sheets.',
-                            style: TextStyle(color: Colors.grey),
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
                           ),
                           const SizedBox(height: 24),
                           if (provider.isLoading)
@@ -60,10 +69,12 @@ class SettingsScreen extends StatelessWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'Connected',
                                   style: TextStyle(
-                                    color: Colors.green,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.secondary,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -85,24 +96,32 @@ class SettingsScreen extends StatelessWidget {
                                     padding: const EdgeInsets.all(8),
                                     margin: const EdgeInsets.only(bottom: 16),
                                     decoration: BoxDecoration(
-                                      color: Colors.red.shade50,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.errorContainer,
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
-                                        color: Colors.red.shade200,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.error.withOpacity(0.5),
                                       ),
                                     ),
                                     child: Row(
                                       children: [
-                                        const Icon(
+                                        Icon(
                                           Icons.error_outline,
-                                          color: Colors.red,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.error,
                                         ),
                                         const SizedBox(width: 8),
                                         Expanded(
                                           child: Text(
                                             provider.errorMessage!,
-                                            style: const TextStyle(
-                                              color: Colors.red,
+                                            style: TextStyle(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.error,
                                             ),
                                           ),
                                         ),
@@ -122,7 +141,7 @@ class SettingsScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    _buildFooter(),
+                    _buildFooter(context),
                   ],
                 ),
               ),
@@ -133,7 +152,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFooter() {
+  Widget _buildFooter(BuildContext context) {
     return Center(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 24),
@@ -154,7 +173,10 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               '© ${DateTime.now().year} ITDOGTICS. All rights reserved.',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),

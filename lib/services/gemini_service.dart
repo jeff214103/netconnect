@@ -67,7 +67,7 @@ class GeminiService {
 
   static Future<String> checkDuplicates({
     required List<Contact> contacts,
-    String modelName = 'gemini-1.5-flash',
+    String modelName = 'gemini-2.0-flash',
   }) async {
     final model = getFirebaseAI().generativeModel(model: modelName);
 

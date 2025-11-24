@@ -80,12 +80,12 @@ class _EventsScreenState extends State<EventsScreen> {
                           );
                         },
                   icon: provider.isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onPrimary,
                           ),
                         )
                       : const Icon(Icons.add),
@@ -133,10 +133,10 @@ class _EventsScreenState extends State<EventsScreen> {
           child: Card(
             elevation: 0,
             shape: RoundedRectangleBorder(
-              side: BorderSide(color: Colors.grey.shade200),
+              side: BorderSide(color: Theme.of(context).colorScheme.outline),
               borderRadius: BorderRadius.circular(16),
             ),
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: TableCalendar(
@@ -166,9 +166,9 @@ class _EventsScreenState extends State<EventsScreen> {
                     }
                   }).toList();
                 },
-                calendarStyle: const CalendarStyle(
+                calendarStyle: CalendarStyle(
                   markerDecoration: BoxDecoration(
-                    color: Colors.blue,
+                    color: Theme.of(context).colorScheme.secondary,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -218,12 +218,14 @@ class _EventsScreenState extends State<EventsScreen> {
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 8),
                     decoration: BoxDecoration(
-                      color: isHighlighted ? Colors.blue.shade50 : Colors.white,
+                      color: isHighlighted
+                          ? Theme.of(context).colorScheme.secondaryContainer
+                          : Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isHighlighted
-                            ? Colors.blue
-                            : Colors.grey.shade200,
+                            ? Theme.of(context).colorScheme.secondary
+                            : Theme.of(context).colorScheme.outline,
                       ),
                     ),
                     child: ListTile(
@@ -233,7 +235,9 @@ class _EventsScreenState extends State<EventsScreen> {
                       ),
                       subtitle: Text(
                         '${event.location} • ${attendees.length} attendees',
-                        style: TextStyle(color: Colors.grey.shade600),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       trailing: const Icon(Icons.chevron_right),
                     ),
